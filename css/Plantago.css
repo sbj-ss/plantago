@@ -1,0 +1,529 @@
+﻿/* common */
+.highlight {
+  font-style: italic;
+  color: #DC7A18;
+}
+.nobr {
+  white-space: nowrap;
+}
+
+/* icon */
+img.icon {
+  cursor: pointer;
+} 
+
+/* caption, former lItem */
+.hoverableCaption {
+  margin-left: 4px;
+  padding: 2px;
+}
+.hoverableCaption.inactive {
+  cursor: default;
+}
+.hoverableCaption.hi {
+  cursor: pointer;
+  padding: 1px;
+  color: blue;
+  border: 1px solid #bfbfbf;
+  background-color: #d4dfd8;
+  opacity: 0.7;
+}
+input +.hoverableCaption {
+  margin-left: 0;
+}
+
+/* selectionToggle */
+.selectionToggle
+{
+  color: #aa00ee;
+  cursor: pointer;
+  font-size: 12pt;  
+  margin-right: 4pt;
+  font-weight: bold;
+}
+.selectionToggle.on
+{
+  text-decoration: overline;
+}
+
+/* leaf */
+.leaf {
+}
+.leaf > .bullet {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: url(images/16/fLeaf.gif);
+}
+.leaf > .extLink {
+  cursor: pointer;
+  margin-left: 6px;
+  display: inline-block;
+  width: 9px;
+  height: 13px;
+  background: url(images/9x13/Right.gif);
+}
+
+/* selectionLeaf */
+.selectionLeaf {
+}
+.selectionLeaf .selPower {
+  cursor: help;
+  margin: 3px;
+}
+
+/* groupLeaf */
+.groupLeaf {
+}
+
+/* .menuLeaf */
+.menuLeaf {
+}
+
+/* folder */
+.folder {
+}
+.folder > .content {
+  margin-left: 12pt;
+}
+.folder > .bullet {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: url(images/16/fPlus.gif);
+}
+.folder > .bullet.open {
+  background: url(images/16/fMinus.gif);
+}
+.folder > .reloadBtn {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: url(images/16/AReload.gif);
+}
+.folder > .marker {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background: url(images/14/UnSelectDown.gif);
+}
+.folder > .marker.selected {
+  background: url(images/14/SelectDown.gif);
+}
+.folder > .marker.grayed {
+  background: url(images/14/SelectedDown.gif);
+}
+.folder > .bullet + .marker {
+  margin-left: 4px;
+}
+
+/* groupFolder */
+.groupFolder > .selectImg {
+  margin-left: 6px;
+  cursor: pointer;
+}
+.groupFolder > .caption-ns {
+  color: #888844;
+ /* font-style: oblique; */
+}
+
+/* findLinkedFolder */
+.findLinkedFolder > .content {
+  margin-left: 18px;
+  border-radius: 4px;
+  background-color: #e0e2d6;
+  padding: 3px;
+}
+.findLinkedFolder .panel {
+  padding-left: 8px;
+  border-top: 1px solid #d0d2c6;
+  margin-top: 2px;
+  padding-top: 2px;
+}
+.findLinkedFolder .panel span {
+  color: #888880;
+  font-size: 8pt;
+}
+.findLinkedFolder .panel img {
+  margin-left: 4px;
+}
+.findLinkedFolder .panel select {
+  color: blue;
+  font-size: 8pt;
+}
+
+/* groupLinkingFolder */
+.groupLinkingFolder > .content {
+  margin-left: 18px;
+  border-radius: 4px;
+  background-color: #e0e2d6;
+  padding: 3px;
+}
+.groupLinkingFolder .panel {
+  border-bottom: 1px solid #d0d2c6;
+  padding: 2px;
+  margin-bottom: 2px;
+}
+.groupLinkingFolder .panel-disabled {
+  border-bottom: none;
+}
+.groupLinkingFolder .panel img {
+  margin-left: 6px;
+}
+.groupLinkingFolder .panel span {
+  margin-left: 4px;
+}
+.groupLinkingFolder .panel select {
+  color: blue;
+  font-size: 8pt;
+}
+.groupLinkingFolder .emptyMessage {
+  font-style: italic;
+  color: #a5aa99;
+}
+
+/* misc menu */
+body.menuBar {
+  background-color: #cdebff;
+  padding: 0;
+}
+/* Chrome дурит */
+body.menuBar table, table.menuBar {
+  border: 0;
+  padding: 0;
+  margin: 0;  
+  width: 100%;
+  color: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+}
+.menuBarButton {
+  margin-left: 2px;
+  border-right: 1px solid #bfbfbf;
+  height: 20px;
+  font-size: 10pt;
+  font-family: Arial, Verdana;
+  padding: 1px 4px 1px 2px;
+  cursor: pointer;
+}
+.menuBarButton:hover {
+  border: 1px solid #bfbfbf;
+  background-color: #d4dfd8;
+  color: blue;
+  opacity: 0.7;
+  padding: 0px 4px 0px 1px;
+}
+.menuBarIcon {
+  margin: 2px;
+  padding: 1px;
+}
+.menuBarIcon:hover {
+  margin: 0;
+  border: 2px solid #afafaf;
+}
+#roPlaceholder {
+  font-style: italic;
+  color: #a5aa99;
+}
+#menuCollapseAllIcon {
+  margin-right: 6px;
+  height: 16px;
+}
+
+.ui-menu { 
+  display: inline-block;
+  white-space: nowrap;
+  z-index: 1000;
+}
+.menuCaption {
+  cursor: default !important;
+  background: #d9e590;
+  border-bottom: 1px solid #a8b267;
+  padding: 3px;
+  text-align: center;
+}
+
+/* проблемы в IE с flex: конфликт, !important тоже не выход */
+/*.drawer > .content
+{
+  display: inline-block;
+} */
+.drawer > .switchBar {
+  position: relative;
+  background-color: rgba(190, 190, 130, .2);
+  cursor: pointer;
+  vertical-align: top;
+}
+.drawer > .switchBar.vert {
+  display: inline-block;
+  width: 10px;
+  height: 100%;
+}
+.drawer > .switchBar.horz {
+  display: block;
+  height: 10px;
+}
+.drawer > .switchBar:hover {
+  background-color: rgba(190, 80, 130, .6);
+}
+.drawer > .switchBar > span {
+  position: absolute;
+  font-size: 1.2em;
+}
+.drawer > .switchBar.vert > span
+{
+  height: 50%;
+  top: 50%;
+  transform: translate(0, -0.6em);
+}
+.drawer > .switchBar.horz > span
+{
+  width: 100%;
+  text-align: center;
+  height: 50%;
+  top: 50%;
+  transform: translate(0, -0.7em);
+}
+
+input + .ui-icon.ui-icon-clear-left {
+  margin: 0 3px 0 3px;
+}
+
+.sliderEx {
+  display: inline-block;
+  white-space: nowrap;
+}
+.sliderEx input {
+  font-size: xx-small;
+  color: blue;
+  width: 4em;
+  height: 1em;
+  margin-left: 4px;
+  vertical-align: bottom;
+}
+.sliderEx .edgeBtn {
+  border: 1px solid #777777;
+  border-radius: 3px;
+  color: #777777;
+  font-size: xx-small;
+  cursor: pointer;
+}
+.sliderEx .edgeBtn:hover {
+  color: blue;
+  background-color: #d4dfd8;
+}
+.sliderEx .slider {
+  width: 100px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+  top: 3px;
+  margin: 2px 4px 2px 9px;
+}
+.sliderEx.vertical > .slider {
+  width: 10px;
+  height: 100px;
+  top: 0;
+  margin: 1px;
+}
+.sliderEx .slider .ui-slider-handle {
+  width: 10px;
+  height: 10px;
+  top: -1px;
+}
+.sliderEx.vertical .ui-slider-handle {
+  top: auto;
+  left: -1px;
+}
+
+.ui-icon {
+  display: inline-block;
+}
+/* немного иконок, которых нет в jq-ui */
+/* Crystal Clear by Everaldo Coelho */
+.ui-icon-clear-left {
+  background: url(images/16/clear_left.png) !important;
+}
+.ui-dialog .ui-icon
+{
+  display: inline-block;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.toolButton {
+  display: inline-block;
+  margin: 1px;
+  padding: 3px;
+  background: linear-gradient(to bottom, white, #e6e6fa);
+  border: 1px solid #aaaaaa;	
+  border-radius: 4px;
+  box-shadow: 0px 0px 2px rgba(196, 162, 248, 0.8);
+  font-weight: bold;
+  font-size: 12px;
+  color: #003228;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.toolButton.hover {
+/*  color: #602ac3;*/
+/*  background-color: #ddf0f0;*/
+  border: 1px solid #dfa057;
+  color: #821388;
+  box-shadow: 0 0 3px #a487be; /*rgba(192, 167, 221, 0.9);*/
+}
+.toolButton.down {
+  color: #702fc8;
+  background: linear-gradient(to bottom, white, #c096dd);
+  border: 1px solid #8c6225;
+  box-shadow: 0 0 3px rgba(255, 107, 50, 0.9);
+}
+.toolButton.waiting {
+  color: #958bb0;
+}
+.toolButton > .waitIcon {
+  display: inline-block;
+  width: 24px;
+  height: 8px;
+  background: url(images/ToolButtonWaitIcon.gif);
+  margin-right: 4px;
+}
+
+.autoCompleter {
+  display: inline-block;
+}
+.autoCompleter > .content {
+  position: absolute;
+  border: 1px solid #aaa;
+  z-index: 15;
+  background-color: white;
+}
+
+/* grid */
+.grid {
+  border: 1px solid #90aa90;
+  border-collapse: collapse;
+  font-size: inherit;
+}
+.grid > thead {
+  background-color: #cfe3c8;
+}
+.grid tr:not(:last-child) {
+  border-bottom: 1px solid #ced7d2;
+}
+.grid thead th {
+  border-bottom: solid 1px #90aa90;
+  padding: .3em;
+}
+.grid > tbody {
+  background-color: #edf9ea;
+}
+.grid > tbody > tr:hover > td {
+  background-color: #fafff6 !important;
+}
+.grid th.sortHeader {
+  cursor: pointer;
+}
+.grid th.sortHeader:hover {
+  background-color: #d9e590;
+}
+.grid td, .grid th {
+  padding: 2px;
+}
+.grid th:not(:last-child) {
+  border-right: solid 1px #90aa90;
+}
+.grid td:not(:last-child) {
+  border-right: solid 1px #ced7d2;
+}
+.grid th.tick {
+  padding: 0;
+}
+.grid .headerCtrl {
+  background-image: url("/css/images/ui-icons_777620_256x240.png");
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  vertical-align: bottom;
+  margin-right: 1px; // уберём фликер при наведении курсора между кнопками
+}
+.grid .sortOrder {
+  font-size: .7rem;
+  font-weight: normal;
+}
+.grid .hidingError {
+  background-color: yellow;
+  color: #206530;
+  padding: .2em;
+}
+
+.multiSelect {
+  display: inline-block;
+  position: relative;
+  vertical-align: middle;
+  height: 16px;
+  margin: 2px 3px 0 2px;
+  border: 1px solid #90aa90;
+  padding: 2px;
+  background-color: #fff;
+  white-space: nowrap;
+}
+.multiSelect > .caption {
+  color: #000;
+  display: inline-block;
+  font-size: .8rem;
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.multiSelect.empty > .caption {
+  color: #777;
+}
+.multiSelect > .ui-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: baseline;
+}
+.multiSelect > .content {
+  position: absolute;
+  background-color: #fff;
+  border: 1px solid #90aa90;
+  padding: 0 0 3px 0;
+  z-index: 100;
+}
+.multiSelect > .content label {
+  display: block;
+  padding: 0 3px 0 3px;
+  white-space: nowrap;
+}
+.multiSelect > .content label.groupEnd,
+.multiSelect > .content label:last-of-type {
+  border-bottom: solid 1px #90aa90;
+}
+.multiSelect > .content label:last-of-type {
+  padding-bottom: 2px;
+}
+.multiSelect > .content .ui-icon {
+  float: right;
+  margin: 3px 3px 0 0;
+  background-color: #e9f7d4;
+}
+.multiSelect > .content .ui-icon.ui-icon-check {
+}
+
+.operationTimer {
+  color: blue;
+}
+
+.launchPanel {
+  background: inherit;
+}
+/*
+.launchPanel input[type='text'], .launchPanel select {
+  font-size: x-small;
+  color: blue;
+  border: 1px solid #AAA;
+  margin-bottom: 2px;
+}
+*/
