@@ -11,7 +11,7 @@ plantago.ParamsHolder = class extends Object
     else if ($.isPlainObject(key) || key instanceof plantago.ParamsHolder)
       Object.assign(this, key); // из "объекта"
     else if (typeof key === "string")
-      this.parseParams(key);
+      this.parse(key);
     return this;
   }
 
