@@ -51,7 +51,7 @@ $(function() {
       displayName: П.localize("Таблица"), // для шапки контекстного меню
       multiSort: true,
       name: "", // для эл-та управления с птичками/выбором
-      showResetViewMenuItem: true,
+      showResetViewMenuItem: false,
       sortable: true,
       sortOrder: "",
       stateOptions: ["colsOrder", "sortOrder", "visibleCols"],
@@ -158,8 +158,7 @@ $(function() {
       const that = this;
       if (this.options.colsMoveable)
       {
-        if (index > 0)
-        {
+        if (index > 1)
           ret.push($("<span>")
             .addClass("ui-icon-seek-first headerCtrl")
             .prop("title", П.localize("Переместить в начало"))
@@ -168,6 +167,7 @@ $(function() {
               const order = that._getHeaderPosition(this);
               that._swapCols(order, 0);
             }));
+         if (index > 0)
           ret.push($("<span>")
             .addClass("ui-icon-seek-prev headerCtrl")
             .prop("title", П.localize("Переместить влево"))
@@ -176,10 +176,8 @@ $(function() {
               const order = that._getHeaderPosition(this);
               that._swapCols(order, order-1);
             }));
-        }
         if (index < total-1)
-        {
-          ret.push($("<span>")
+           ret.push($("<span>")
             .addClass("ui-icon-seek-next headerCtrl")
             .prop("title", П.localize("Переместить вправо"))
             .icon()
@@ -187,6 +185,7 @@ $(function() {
               const order = that._getHeaderPosition(this);
               that._swapCols(order, order+1);
             }));
+        if (index < total-2)
           ret.push($("<span>")
             .addClass("ui-icon-seek-end headerCtrl")
             .prop("title", П.localize("Переместить в конец"))
@@ -195,8 +194,7 @@ $(function() {
               const order = that._getHeaderPosition(this);
               that._swapCols(order, that._sortHeaders.length - 1);
             }));
-        }
-      }
+       }
       if (this.options.colsHideable)
         ret.push($("<span>")
           .addClass("ui-icon-closethick headerCtrl")
