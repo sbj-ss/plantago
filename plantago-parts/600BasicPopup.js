@@ -120,9 +120,9 @@ $(function() {
 
     showMenu: function(caller, e)
     {
-      e.preventDefault();
       if (!this.hasActiveItems())
         return false;
+      e.preventDefault();
       this._caller = caller;
       if (window.visibleMenu)
         window.visibleMenu.hide();
