@@ -84,7 +84,6 @@ $(function() {
           .end()
           .end()
           .show();
-console.log(newContent);
       }
       this._trigger("load", null, {
         rawData: response,
