@@ -72,10 +72,11 @@ $(function() {
       content.children("[data-name='placeholder']").remove();
       if (!response)
         return;
+      let newContent;
       if (this.options.forceHtmlContent || response.nodeType)
       {
         const selector = "[data-bhv]" + (cfgNonstandardAttrCompat? ",[bhv]": "");
-        const newContent = content
+        newContent = content
           .appendFetchedFragment(response, this.options.newerFirst)
           .find(selector)
           .addBack(selector)
@@ -83,6 +84,7 @@ $(function() {
           .end()
           .end()
           .show();
+console.log(newContent);
       }
       this._trigger("load", null, {
         rawData: response,
@@ -133,10 +135,9 @@ $(function() {
 
     _gatherData: function(extraData)
     {
-      const allParams = this._walkThroughControls();
+      let allParams = this._walkThroughControls();
       if (extraData)
-        for (let name in extraData)
-          allParams[name] = extraData[name];
+        allParams = {...allParams, ...extraData};
       this._trigger("addExtraQueryParams", null, allParams);
       if (!this._trigger("validate", null, allParams))
         return false;
