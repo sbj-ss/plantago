@@ -683,7 +683,7 @@ $(function() {
         th = $(th);
         if (that._getHeaderId(th) === fieldName)
         {
-          n = i + 1;
+          n = i + 1 - this._getAutoColumnCount();
           hdr = th; 
           return false;
         }
