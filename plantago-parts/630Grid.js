@@ -57,7 +57,9 @@ $(function() {
       stateOptions: ["colsOrder", "sortOrder", "visibleCols"],
       stateSaveValue: false, // нечего. потом будут рандомные птички
       tickType: "none",
-      visibleCols: [] // и здесь тоже пустой список = ничего не делать 
+      visibleCols: [], // и здесь тоже пустой список = ничего не делать 
+      // events
+      change: $.noop
     },
 
     _create: function()
@@ -249,6 +251,7 @@ $(function() {
         }
       });
       const gridId = this.element.prop("id");
+      const that = this;
       this.element.find("tbody > tr").each((i, tr) => {
         this._tieElement({
           elementName: "th",
@@ -260,10 +263,12 @@ $(function() {
           cssClass: "tick"
         });
         const td = this["tickTd" + i];
-        td.append($("<input>", {
-          type: tt,
-          name: gridId
-        }));
+        td.append(
+          $("<input>", {
+            type: tt,
+            name: gridId
+          }).on("change.grid", e => that._trigger("change", e))
+        );
       });
       return this;
     },
