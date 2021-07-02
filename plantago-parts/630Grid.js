@@ -225,7 +225,7 @@ $(function() {
           that._controlsRow
             .append($("<th>")
               .addClass("headerCtrlGroup")
-              .condCall(!$(col).is(":visible"), "hide")
+              .condCall($(col).css("display") == "none", "hide")
               .append(that._getMoveHideControlsForCol(i, that._sortHeaders.length))
             );
         });
@@ -500,7 +500,7 @@ $(function() {
     {
       const cols = [];
       for (let hdr of this._sortHeaders)
-        if (getAll || hdr.is(":visible"))
+        if (getAll || (hdr.css("display") != "none"))
           cols.push(this._getHeaderId(hdr));
       this.options.visibleCols = cols;
       return this;
@@ -605,7 +605,8 @@ $(function() {
     clear: function()
     {
       this._getInputs().each((i, input) => {
-        input.checked = false;
+        if (!input.disabled)
+          input.checked = false;
       });
       return this;
     },
@@ -614,7 +615,8 @@ $(function() {
     {
       if (П.liTickType.get(this.options.tickType).name === "checkbox")
         this._getInputs().each((i, input) => {
-          input.checked = true;
+          if (!input.disabled)
+            input.checked = true;
         });
       return this;
     },
@@ -623,7 +625,8 @@ $(function() {
     {
       if (П.liTickType.get(this.options.tickType).name === "checkbox")
         this._getInputs().each((i, input) => {
-          input.checked = !input.checked;
+          if (!input.disabled)
+            input.checked = !input.checked;
         });
       return this;
     },
@@ -705,14 +708,16 @@ $(function() {
       return this._getCol(fieldName, "self");
     },
 
-    getAdjacentCell: function(fieldName, td) 
+    getAdjacentCell: function(fieldNameOrIndex, td) 
     {
-      return $(td).parent().children("td:nth-of-type(" + this.getColPos(fieldName) + ")");
+      let idx = typeof(fieldNameOrIndex) === 'number'? fieldNameOrIndex: this.getColPos(fieldNameOrIndex);
+      return $(td).parent().children(`td:nth-of-type(${idx})`);
     },
 
-    augmentCells: function(fieldName, f)
+    augmentCells: function(fieldNameOrIndex, f)
     {
-      this.element.find("td:nth-of-type(" + this.getColPos(fieldName) + ")").each(f);
+      let idx = typeof(fieldNameOrIndex) === 'number'? fieldNameOrIndex: this.getColPos(fieldNameOrIndex);
+      this.element.find(`td:nth-of-type(${idx})`).each(f);
       return this;
     },
 
