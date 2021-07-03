@@ -419,8 +419,8 @@ input + .ui-icon.ui-icon-clear-left {
 .grid > tbody {
   background-color: #edf9ea;
 }
-.grid > tbody > tr:hover > td {
-  background-color: #fafff6 !important;
+.grid > tbody > tr:hover {
+  background-color: #fafff6;
 }
 .grid th.sortHeader {
   cursor: pointer;
@@ -430,6 +430,7 @@ input + .ui-icon.ui-icon-clear-left {
 }
 .grid td, .grid th {
   padding: 2px;
+  background: transparent;
 }
 .grid th:not(:last-child) {
   border-right: solid 1px #90aa90;
