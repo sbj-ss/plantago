@@ -272,7 +272,7 @@ $(function() {
             text: that._localize("Произошла ошибка") + ": " + (errorThrown.message || errorThrown)
           }));
       }).always(() => {
-        that._placeholder.hide();
+        that._placeholder.detach();
       });
     },
 
