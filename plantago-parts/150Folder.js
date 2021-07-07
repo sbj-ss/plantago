@@ -64,6 +64,7 @@ $(function() {
     options:
     {
       autoCreateWidgetsOnLoad: true,
+      clearOnLoad: true,
       contentSelector: "div:first", // TODO _sO
       cssClass: "folder",
       hasReloadButton: false,
@@ -71,6 +72,7 @@ $(function() {
       isRadioContainer: true,
       loadable: false,
       loadParams: [], // [param1, param2] -> uri?param1=data(param1)&...
+      newerFirst: false,
       openAtOnce: false,
       paramsAsJson: false,
       preventCaching: true,
@@ -158,6 +160,7 @@ $(function() {
           text: this._localize("Пожалуйста, подождите…")
         }
       });
+      this._placeholder.hide();
       return this;
     },
 
@@ -237,9 +240,10 @@ $(function() {
         this._loaded = true;
         return;
       }
-      this._content
-        .empty()
-        .append(this._placeHolder);
+      if (this.options.clearOnLoad)
+        this._content
+          .empty()
+          .append(this._placeholder.show());
       // сначала выполним тупой сбор по списку, потом при наличии дадим возможность перекрыть
       const that = this;
       const extraParams = this.options.loadParams.reduce((state, param) => {
@@ -254,19 +258,21 @@ $(function() {
         cache: !this.options.preventCaching,
         method: this.options.httpMethod,
         processData: !this.options.paramsAsJson
-      }).done(function(data) {
+      }).done(data => {
         that._loaded = 1;
         const fragment = that._parseResponse(data, xhr); // замыкание на xhr
         that._trigger("load", null, {
           "fragment": fragment,
           "widgetElement": that.element
         });
-      }).fail(function(jqXHR, textStatus, errorThrown) {
+      }).fail((jqXHR, textStatus, errorThrown) => {
         that._content
-          .empty()
+          .condCall(this.options.clearOnLoad, 'empty')
           .append($("<span>", {
             text: that._localize("Произошла ошибка") + ": " + (errorThrown.message || errorThrown)
           }));
+      }).always(() => {
+        that._placeholder.hide();
       });
     },
 
@@ -317,15 +323,17 @@ $(function() {
       // второй раз анализировать заголовки не будем.
       // "an XML MIME type will yield XML, in 1.4 JSON will yield a JavaScript object, 
       // in 1.4 script will execute the script, and anything else will be returned as a string"
-      this._content
-        .find(":data('plantagoWidgetName')")
-        .callPlantagoWidget("destroy")
-        .end()
-        .empty();
+      if (this.options.clearOnLoad)
+        this._content
+          .find(":data('plantagoWidgetName')")
+          .callPlantagoWidget("destroy")
+          .end()
+          .empty();
       let fragment;
       if ($.isArray(data) || $.isPlainObject(data)) // массив или объект JSON под узлы/узел
       {
         data = this._extendLoadedJson(data);
+        // TODO honor newerFirst
         fragment = plantago.createElementListFromJson({
           array: data,
           parent: this._content,
@@ -333,11 +341,11 @@ $(function() {
           createWidgets: false // создадим в конце
         });
       } else if (data.ownerDocument) // документ XML/XHTML
-        fragment = this._content.appendFetchedFragment(data);
+        fragment = this._content.appendFetchedFragment(data, this.options.newerFirst);
       else { // документ HTML или plain text, попробуем HTML
-        fragment = this._content.appendFetchedFragment(data);
+        fragment = this._content.appendFetchedFragment(data, this.options.newerFirst);
         if (!this._content.contents().length)
-          this._content.text(data); // откат на текст
+          this._content.ownText((this.options.clearOnLoad? "": this._content.ownText()) + data); // откат на текст
       }
       this._content.show();
       if (this.options.autoCreateWidgetsOnLoad)
