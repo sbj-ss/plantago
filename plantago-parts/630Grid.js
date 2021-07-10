@@ -59,7 +59,8 @@ $(function() {
       tickType: "none",
       visibleCols: [], // и здесь тоже пустой список = ничего не делать 
       // events
-      change: $.noop
+      change: $.noop,
+      colHidden: $.noop,
     },
 
     _create: function()
@@ -516,6 +517,7 @@ $(function() {
         .end()
         .find("tbody > tr > td:nth-of-type(" + (index+1) + ")")
         .switchCall(show, ["hide", "show"]);
+      this._trigger("colHidden", index, show);
       return this;
     },
 
