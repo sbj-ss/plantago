@@ -22,7 +22,7 @@ $(function() {
         mouseover: "_showHover",
         mouseout: "_hideHover",
         mousedown: "_showClick",
-        mouseup: function(e) {
+        click: function(e) {
           this._showHover();
           if (!this._waiting)
             this._trigger("run");
