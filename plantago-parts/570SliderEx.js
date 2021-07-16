@@ -185,7 +185,7 @@ $(function() {
     {
       if (key == "gradient")
         value = plantago.sliderExGradient.get(value);
-      this._superApply(arguments);
+      this._super(key, value);
       switch (key)
       {
         case "minValue":

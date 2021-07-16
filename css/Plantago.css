@@ -295,12 +295,12 @@ input + .ui-icon.ui-icon-clear-left {
   white-space: nowrap;
 }
 .sliderEx input {
-  font-size: xx-small;
+  font-size: small;
   color: blue;
   width: 4em;
   height: 1em;
   margin-left: 4px;
-  vertical-align: bottom;
+  vertical-align: baseline;
 }
 .sliderEx .edgeBtn {
   border: 1px solid #777777;
