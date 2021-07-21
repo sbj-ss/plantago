@@ -168,7 +168,8 @@ $(function() {
         this._appendMessage(this._localize("Пожалуйста, подождите…"), "waitPlease");  
       if (this.options.lockLaunchersUntilCompletion)
       {
-        invoker && invoker.callPlantagoWidget("enterWaitState");
+        if (invoker && invoker.data('plantagoClass-toolButton'))
+          invoker.callPlantagoWidget("enterWaitState");
         this.element
           .find(this.options.lockSelector)
           .callPlantagoWidget("enterWaitState", true);
@@ -201,7 +202,8 @@ $(function() {
           .callPlantagoWidget("stop");
         if (that.options.lockLaunchersUntilCompletion) 
         {
-          invoker && invoker.callPlantagoWidget("leaveWaitState");
+          if (invoker && invoker.data("plantagoClass-toolButton"))
+            invoker.callPlantagoWidget("leaveWaitState");
           that.element
             .find(that.options.lockSelector)
             .callPlantagoWidget("leaveWaitState", true);
