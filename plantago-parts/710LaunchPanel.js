@@ -14,7 +14,7 @@ $(function() {
       forceHtmlContent: false,
       httpMethod: "POST",
       launchOnEnterKey: true,
-      launcherSelector: ":data('plantagoClass-toolButton')",
+      launcherSelector: ":data('plantagoClass-toolButton'):not(:data('do-not-launch')):not([data-do-not-launch])",
       lockLaunchersUntilCompletion: true,
       lockSelector: ":data('plantagoClass-toolButton')",
       newerFirst: false, // приписывать свежее в начало
@@ -105,12 +105,18 @@ $(function() {
       return this;
     },
 
+    clearContent: function()
+    {
+      this._getContentElement().empty();
+      return this;
+    },
+
     clear: function()
     {
+      this.clearContent();
       this.element
          .find(":data('plantagoClass-basicInput')")
          .callPlantagoWidget("clear");
-      this._getContentElement().empty();
       return this;
     },
 
