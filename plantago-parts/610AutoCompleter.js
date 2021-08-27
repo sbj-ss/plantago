@@ -10,6 +10,7 @@ $(function() {
       adjustWidth: false,
       itemSelector: "",
       autoHide: true,
+      hideOnFocusLoss: true,
       //events
       show: $.noop,
       hide: $.noop
@@ -40,6 +41,7 @@ $(function() {
         cssClass: true
       });
       this._content.hide();
+      let that = this;
       this._on(this._input, {
         keyup: $.proxy(this.handleKeys)
       });
@@ -80,7 +82,7 @@ $(function() {
         .scrollTop(0)
         .condCall(this.options.adjustWidth, "css", "width", this._input.outerWidth());
       this._contentVisible = true;
-      if (this.options.autoHide)
+      if (this.options.hideOnFocusLoss)
       {
         const selfRef = this;
         $(document).one("click", function(e) {
