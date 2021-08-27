@@ -37,6 +37,8 @@ $(function() {
       tickType: "none",  // plantago.liTickType
       active: true,
       url: "",
+      urlTitle: П.localize("Перейти к ресурсу"),
+      urlClass: 'extLink',
       objectId: ""       // поскольку узлы могут отмечаться, их нужно идентифицировать
     },
 
@@ -119,18 +121,17 @@ $(function() {
         this._tieElement({
           name: "_extLink",
           elementName: "a",
-          cssClass: true,
+          cssClass: this.options.urlClass,
           setName: true,
           selector: "*[name='extLink']",
           creationProps: {
             target: "new",
             href: this.options.url,
-            title: this._localize("Перейти к ресурсу")
-          }
+            title: this.options.urlTitle
+          },
+          after: this._caption
         });
-        this._extLink
-          .icon()
-          .appendTo(this.element);
+        this._extLink.icon();
       }
       return this;
     },

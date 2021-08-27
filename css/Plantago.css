@@ -55,7 +55,7 @@ input +.hoverableCaption {
   height: 16px;
   background: url(images/16/fLeaf.gif);
 }
-.leaf > .extLink {
+.extLink {
   cursor: pointer;
   margin-left: 6px;
   display: inline-block;
