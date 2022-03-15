@@ -366,6 +366,26 @@
       for (let m of members)
         m(...args);
     }
+  },
+
+  parseBool: function(s, dflt)
+  {
+    if (typeof s === "undefined")
+      return dflt;
+    if (typeof s === "number")
+      return !!s;
+    if (s === null)
+      return false;
+    if (typeof s === "object")
+      return true;
+    if (s.search(/_t|true|yes/i) >= 0)
+      return true;
+    if (s.search(/_f|false|no/i) >= 0)
+      return false;
+    let n = parseInt(s);
+    if (!isNaN(n))
+      return !!n;
+    return dflt;
   }
 };
 

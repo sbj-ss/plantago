@@ -267,7 +267,8 @@ $(function() {
         td.append(
           $("<input>", {
             type: tt,
-            name: gridId
+            name: gridId,
+            checked: П.parseBool($(tr).data("row-checked"), false)
           }).on("change.grid", e => that._trigger("change", e))
         );
       });
@@ -307,7 +308,7 @@ $(function() {
 
     _getHeaderIsNumber: function(hdr)
     {
-      return hdr.data("is-number");
+      return П.parseBool(hdr.data("is-number"), false);
     },
 
 // сортировка
@@ -376,7 +377,7 @@ $(function() {
             pos: i,
             isNumber: this._getHeaderIsNumber(hdr),
             childSelector: this._getHeaderChildSelector(hdr)
-          }; // TODO П.parseBool
+          }; 
           if (cur.length > 1)
             hdr.append($("<span>").addClass("sortOrder").text(pos + 1));
         }
