@@ -51,6 +51,7 @@ $(function() {
       displayName: П.localize("Таблица"), // для шапки контекстного меню
       multiSort: true,
       name: "", // для эл-та управления с птичками/выбором
+      showContextMenu: true,
       showResetViewMenuItem: false,
       sortable: true,
       sortOrder: "",
@@ -81,6 +82,8 @@ $(function() {
       const that = this;
       this._on(this.element, {
         contextmenu: function(e) {
+          if (!that.options.showContextMenu)
+            return;
           const hasTicks = plantago.liTickType.get(that.options.tickType).name === "checkbox";
           that._popup
             .callPlantagoWidget("showItems", {
@@ -589,7 +592,7 @@ $(function() {
         this._sort();
       if ("tickType" in options)
         this._prependTicksCol();
-      if ("showResetViewMenuItem")
+      if ("showResetViewMenuItem" in options)
         this._showResetViewMenuItem();
     },
 
