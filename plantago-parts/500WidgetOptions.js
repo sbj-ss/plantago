@@ -26,7 +26,7 @@ $(function() {
     yearSuffix: ""
   };
   // TODO на лету
-  //$.datepicker.setDefaults($.datepicker.regional["ru"]);
+  $.datepicker.setDefaults($.datepicker.regional["ru"]);
 
   const datePickerDefaultOpts = plantago.makeConstant({
     showButtonPanel: true,
