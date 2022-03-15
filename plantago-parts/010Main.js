@@ -374,10 +374,14 @@
       return dflt;
     if (typeof s === "number")
       return !!s;
+    if (typeof s === "boolean")
+      return s;
     if (s === null)
       return false;
     if (typeof s === "object")
       return true;
+    if (typeof s !== "string")
+      return dflt;
     if (s.search(/_t|true|yes/i) >= 0)
       return true;
     if (s.search(/_f|false|no/i) >= 0)
