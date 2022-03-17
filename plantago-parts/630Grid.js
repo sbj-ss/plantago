@@ -64,6 +64,8 @@ $(function() {
       colHidden: $.noop,
     },
 
+    _augmenters: {},
+
     _create: function()
     {
       this._superApply(arguments);
@@ -74,7 +76,7 @@ $(function() {
         ._hideShowCols()
         ._bindSortHandlers()
         ._appendMoveHideControls()
-        ._prependTicksCol()
+        ._prependTickCols()
         ._prependRowNumbersCol()
         ._reorderCols()
         ._createPopup()
@@ -121,17 +123,18 @@ $(function() {
 
     _refreshSortCols: function()
     {
-      const _sortHeaders = this._sortHeaders = [];
+      this._sortHeaders = [];
       // шапка может иметь сложную структуру, придётся пройтись
       const headerRows = this.element
         .children("thead")
         .children("tr")
         .not(":data[name=controlsRow]");
+      const that = this;
       headerRows.each((i, row) => {
         $(row).children("th").each((j, col) => {
           col = $(col);
           if ((col.prop('rowspan') || 1) + i === headerRows.length && col.data("name") !== "tickTh")
-            _sortHeaders.push(col);
+            that._sortHeaders.push(col);
         });
       });
       return this;
@@ -164,6 +167,7 @@ $(function() {
       const that = this;
       if (this.options.colsMoveable)
       {
+        // повесим ровно необходимое кол-во кнопок, чтобы не растягивать столбцы
         if (index > 1)
           ret.push($("<span>")
             .addClass("ui-icon-seek-first headerCtrl")
@@ -180,18 +184,18 @@ $(function() {
             .icon()
             .click(function(e) {
               const order = that._getHeaderPosition(this);
-              that._swapCols(order, order-1);
+              that._swapCols(order, order - 1);
             }));
-        if (index < total-1)
+        if (index < total - 1)
            ret.push($("<span>")
             .addClass("ui-icon-seek-next headerCtrl")
             .prop("title", П.localize("Переместить вправо"))
             .icon()
             .click(function(e) {
               const order = that._getHeaderPosition(this);
-              that._swapCols(order, order+1);
+              that._swapCols(order, order + 1);
             }));
-        if (index < total-2)
+        if (index < total - 2)
           ret.push($("<span>")
             .addClass("ui-icon-seek-end headerCtrl")
             .prop("title", П.localize("Переместить в конец"))
@@ -208,7 +212,7 @@ $(function() {
           .icon()
           .click(function(e) {
             that._hideCol(that._getHeaderPosition(this));
-          }));
+        }));
       return ret;
     },
 
@@ -222,7 +226,7 @@ $(function() {
           elementName: "tr",
           name: "_controlsRow",
           setName: true,
-          selector: "[name=controlsRow]",
+          selector: "[name='controlsRow']",
           owner: this.element.children("thead")
         });
         this._sortHeaders.forEach((col, i) => {
@@ -236,10 +240,39 @@ $(function() {
       }
       return this;
     },
-
-    _prependTicksCol: function()
+    
+    _prependTickCol: function(tr, tickType, gridId)
     {
-      this._untieElements({ startsWith: "tick" });
+      if (tickType === undefined)
+        tickType = П.liTickType.get(this.options.tickType).name;
+      if (tickType === "none")
+        return;
+      if (gridId === undefined)
+        gridId = this.element.data("name");
+      const that = this;
+      const tdName = "tickTd" + (tr.data("row-id") || plantago.newId128());
+      this._tieElement({
+        elementName: "th",
+        name: tdName,
+        setName: true,
+        selector: `[name='${tdName}']`,
+        owner: tr,
+        makeFirst: true,
+        cssClass: "tick",
+        returnElement: true
+      }).append(
+        $("<input>", {
+          type: tickType,
+          name: gridId,
+          checked: П.parseBool(tr.data("row-checked"), false)
+        }).on("change.grid", e => that._trigger("change", e))
+      );
+    },
+
+    _prependTickCols: function()
+    {
+      this._untieElements({ startsWith: "tick" }); // сносит всё, включая сами ячейки
+      // TODO: оптимизировать с учётом предыдущего типа, чтобы не перестраивать таблицу каждый раз
       const tt = П.liTickType.get(this.options.tickType).name;
       if (tt === "none")
         return this;
@@ -247,39 +280,22 @@ $(function() {
         elementName: "th",
         name: "tickTh",
         setName: true,
-        selector: "[name=tickTh]",
+        selector: "[name='tickTh']",
         owner: this.element.find("thead > tr:first-child"),
         makeFirst: true,
         creationProps: {
           rowspan: this.element.find("thead > tr").length
         }
       });
-      const gridId = this.element.prop("id");
+      const gridId = this.element.data("name");
       const that = this;
-      this.element.find("tbody > tr").each((i, tr) => {
-        this._tieElement({
-          elementName: "th",
-          name: "tickTd" + i,
-          setName: true,
-          selector: "[name^=tickTd]",
-          owner: tr,
-          makeFirst: true,
-          cssClass: "tick"
-        });
-        const td = this["tickTd" + i];
-        td.append(
-          $("<input>", {
-            type: tt,
-            name: gridId,
-            checked: П.parseBool($(tr).data("row-checked"), false)
-          }).on("change.grid", e => that._trigger("change", e))
-        );
-      });
+      this.element.find("tbody > tr").each((i, tr) => that._prependTickCol($(tr), tt, gridId));
       return this;
     },
 
     _prependRowNumbersCol: function()
     {
+      // TODO
       return this;
     },
 
@@ -299,17 +315,17 @@ $(function() {
       return this._showResetViewMenuItem();
     },
 
-    _getHeaderId: function(hdr)
+    _getColNameByHeader: function(hdr)
     {
       return hdr.data("col-name");
     },
 
-    _getHeaderChildSelector: function(hdr)
+    _getChildSelectorByHeader: function(hdr)
     {
       return hdr.data("child-selector");
     },
 
-    _getHeaderIsNumber: function(hdr)
+    _getIsNumberByHeader: function(hdr)
     {
       return П.parseBool(hdr.data("is-number"), false);
     },
@@ -317,36 +333,34 @@ $(function() {
 // сортировка
     _getSortOrderByColClick: function(e)
     {
-      const what = this._getHeaderId($(e.currentTarget));
+      const colName = this._getColNameByHeader($(e.currentTarget));
       if (!e.ctrlKey || !this.options.multiSort)
       {
-        if (this.options.sortOrder === what)
-          // реверс
-          return "-" + what;
-        return what;
+        if (this.options.sortOrder === colName)
+          return "-" + colName; // реверс
+        return colName; // сортировки не было, будет по этому полю
       }
       // множественная сортировка
-      const cur = this.options.sortOrder.split("|");
+      const curOrder = this.options.sortOrder.split("|");
       for (let prefix of ["", "-"])
       {
-        const pos = cur.indexOf(prefix + what);
-        if (pos !== -1) {
-          if (e.shiftKey) 
+        const pos = curOrder.indexOf(prefix + colName);
+        if (pos !== -1) // поле входит в существующий порядок сортировки
+        {
+          if (e.shiftKey) // запрошено удаление
           {
-            if (cur.length < 2) // не сбрасываем последнее поле
-              return cur.join("|");
-            // удаление из сортировки
-            if (pos < cur.length - 1)
-              return cur.slice(0, pos).concat(cur.slice(pos+1)).join("|");
-            return cur.slice(0, pos).join("|");
+            if (curOrder.length < 2) // не сбрасываем последнее поле
+              return curOrder.join("|");
+            if (pos < curOrder.length - 1) // не последнее
+              return cur.slice(0, pos).concat(curOrder.slice(pos + 1)).join("|");
+            return curOrder.slice(0, pos).join("|"); // последнее
           }
-          // реверс
-          cur[pos] = (prefix? "": "-") + what;
-          return cur.join("|");
+          curOrder[pos] = (prefix? "": "-") + colName;  // реверс по этому полю
+          return curOrder.join("|");
         }
       }
-      // добавление
-      return cur.concat(what).join("|");
+      // поля не было в списке, добавляем
+      return curOrder.concat(colName).join("|");
     },
 
     _sortByClick: function(e)
@@ -358,48 +372,50 @@ $(function() {
       // здесь не надо return: это обработчик события
     },    
 
-    _showSortMarkersAndComputeIndexes: function()
+    _showSortMarkersAndGetColData: function()
     {
-      const cur = this.options.sortOrder.split("|");
+      // выполняем это после перевычисления порядка сортировки, но перед самой сортировкой.
+      // перерисовываем маркеры на заголовках, снимаем с заголовков необходимую информацию
+      const curOrder = this.options.sortOrder.split("|");
       const ret = [];
       const that = this;
       this._sortHeaders.forEach((hdr, i) => {
-        hdr.children().remove();
-        const field = this._getHeaderId(hdr);
-        let pos = cur.indexOf(field);
+        hdr.children().remove(); // удаляем существующие маркеры
+        const colName = this._getColNameByHeader(hdr);
+        let pos = curOrder.indexOf(colName);
         if (pos > -1)
           hdr.append($("<span>").addClass("ui-icon-arrowthick-1-n headerCtrl"));
         else {
-          pos = cur.indexOf("-" + field);
+          pos = curOrder.indexOf("-" + colName);
           if (pos > - 1)
             hdr.append($("<span>").addClass("ui-icon-arrowthick-1-s headerCtrl"));
         }
-        if (pos > -1)
+        if (pos > -1) // нашли в том или ином виде
         {
           ret[pos] = {
             pos: i,
-            isNumber: this._getHeaderIsNumber(hdr),
-            childSelector: this._getHeaderChildSelector(hdr)
+            isNumber: this._getIsNumberByHeader(hdr),
+            childSelector: this._getChildSelectorByHeader(hdr)
           }; 
-          if (cur.length > 1)
+          if (curOrder.length > 1) // покажем номер во множественной сортировке
             hdr.append($("<span>").addClass("sortOrder").text(pos + 1));
         }
       });
       return ret;
     }, 
 
-    _compileSortGetter: function(indexes)
+    _compileSortGetter: function(colData)
     {
-      const fields = [];
-      for (let ind of indexes)
+      const colGetters = [];
+      for (let colDatum of colData)
       {
-        const childSel = ind.childSelector? ".children('" + ind.childSelector + "')": "";
-        if (ind.isNumber)
-          fields.push("parseFloat(c.eq(" + ind.pos + ")" + childSel + ".ownText())");
+        const childSel = colDatum.childSelector? ".children('" + colDatum.childSelector + "')": "";
+        if (colDatum.isNumber)
+          colGetters.push("parseFloat(c.eq(" + colDatum.pos + ")" + childSel + ".ownText())");
         else
-          fields.push("c.eq(" + ind.pos + ")" + childSel + ".ownText().trim()");
+          colGetters.push("c.eq(" + colDatum.pos + ")" + childSel + ".ownText().trim()");
       }
-      return new Function("r", "c = r.children('td'); return [" + fields.join(", ") + "];");
+      return new Function("r", "c = r.children('td'); return [" + colGetters.join(", ") + "];");
     },
 
     _compileSortComparator: function()
@@ -418,10 +434,10 @@ $(function() {
 
     _sort: function()
     {
-      const indexes = this._showSortMarkersAndComputeIndexes();
+      const colData = this._showSortMarkersAndGetColData();
       if (!this.options.sortOrder)
         return;
-      const getter = this._compileSortGetter(indexes);
+      const getter = this._compileSortGetter(colData);
       const comparator = this._compileSortComparator();
       this.element.children('tbody').children('tr').quickSortSameParent(getter, comparator);
       return this;
@@ -430,23 +446,26 @@ $(function() {
 // перестановка столбцов
     _getColsOrder: function()
     {
-      return this._sortHeaders.map(hdr => this._getHeaderId(hdr));
+      return this._sortHeaders.map(hdr => this._getColNameByHeader(hdr));
     },
 
     _swapCols: function(oldIndex, newIndex)
     {
-      const ofs = this._getAutoColumnCount();
+      const offset = this._getAutoColumnCount();
       let swap;
       if (oldIndex < newIndex)
         swap = function(a, b) { a.insertAfter(b); };
       else
         swap = function(a, b) { a.insertBefore(b); };
+      // поменяем местами все ячейки с данными
       for (let row of this.element.children("tbody").children("tr"))
       {
         c = $(row).children();
-        swap(c.eq(ofs + oldIndex), c.eq(ofs + newIndex));
+        swap(c.eq(offset + oldIndex), c.eq(offset + newIndex));
       }
+      // поменяем местами заголовки
       swap(this._sortHeaders[oldIndex], this._sortHeaders[newIndex]);
+      // переставим заголовки в массиве
       if (newIndex === 0) 
         this._sortHeaders = [this._sortHeaders[oldIndex]]
           .concat(this._sortHeaders.slice(0, oldIndex))
@@ -457,6 +476,7 @@ $(function() {
           .concat([this._sortHeaders[oldIndex]]);
       else
         П.swapArrayItems(this._sortHeaders, oldIndex, newIndex);
+      // обновим в опциях порядок следования столбцов
       this.options.colsOrder = this._getColsOrder();
       return this;
     },
@@ -490,12 +510,12 @@ $(function() {
 // скрытие/показ столбцов
     _excludeColFromSort: function(index)
     {
-      const field = this._sortHeaders[index].ownText();
-      const cur = this.options.sortOrder.split("|");
-      const pos = Math.max(cur.indexOf(field), cur.indexOf("-" + field));
+      const colName = this._getColNameByHeader(this._sortHeaders[index]);
+      const curOrder = this.options.sortOrder.split("|");
+      const pos = Math.max(curOrder.indexOf(colName), curOrder.indexOf("-" + colName));
       if (pos > -1)
       {
-        this.options.sortOrder = cur.slice(0, pos).concat(cur.slice(pos+1, cur.length)).join("|");
+        this.options.sortOrder = curOrder.slice(0, pos).concat(curOrder.slice(pos + 1, curOrder.length)).join("|");
         this._sort();
       }
       return this;
@@ -506,20 +526,20 @@ $(function() {
       const cols = [];
       for (let hdr of this._sortHeaders)
         if (getAll || (hdr.css("display") != "none"))
-          cols.push(this._getHeaderId(hdr));
+          cols.push(this._getColNameByHeader(hdr));
       this.options.visibleCols = cols;
       return this;
     },
 
     _hideShowCol: function(index, show)
     {
-      const acc = this._getAutoColumnCount();
+      const offset = this._getAutoColumnCount();
       this.element
         .find("thead > tr").each((i, tr) => {
-          $(tr).children().eq(index+(!i? acc: 0)).switchCall(show, ["hide", "show"]);
+          $(tr).children().eq(index+(!i? offset: 0)).switchCall(show, ["hide", "show"]);
         })
         .end()
-        .find("tbody > tr > td:nth-of-type(" + (index+1) + ")")
+        .find(`tbody > tr > td:nth-of-type(${index + 1})`)
         .switchCall(show, ["hide", "show"]);
       this._trigger("colHidden", index, show);
       return this;
@@ -530,7 +550,7 @@ $(function() {
       if (this.options.visibleCols.length === 1)
       {
         const remaining = this._sortHeaders.find(
-          item => this._getHeaderId(item) === this.options.visibleCols[0]
+          item => this._getColNameByHeader(item) === this.options.visibleCols[0]
         );
         const content = remaining.children().detach();
         const text = remaining.ownText();
@@ -553,15 +573,15 @@ $(function() {
         .find("th:not(:visible)")
         .add("td:not(:visible)")
         .show();
-      return this;
+      return this._updateVisibleColsOption();
     },
 
     _hideShowCols: function()
     {
       if (!this.options.visibleCols.length)
-        return this._updateVisibleColsOption(true).showAllCols();
+        return this.showAllCols();
       this._sortHeaders.forEach((hdr, i) => {
-        const show = this.options.visibleCols.indexOf(this._getHeaderId(hdr)) > -1;
+        const show = this.options.visibleCols.indexOf(this._getColNameByHeader(hdr)) > -1;
         this._hideShowCol(i, show);
       });
       return this;
@@ -570,9 +590,8 @@ $(function() {
 // динамическое управление
     _setOptions: function(options)
     {
-      // не уводим сортировку в никуда
       if (!options.sortOrder)
-        delete options.sortOrder;
+        delete options.sortOrder; // не уводим сортировку в никуда TODO: снять маркеры?..
       this._superApply(arguments);
       if ("colsMoveable" in options || "colsHideable" in options)
         this._appendMoveHideControls();
@@ -690,7 +709,7 @@ $(function() {
       const that = this;
       this.element.find("th").each((i, th) => {
         th = $(th);
-        if (that._getHeaderId(th) === fieldName)
+        if (that._getColNameByHeader(th) === fieldName)
         {
           n = i + 1 - this._getAutoColumnCount();
           hdr = th; 
@@ -724,6 +743,7 @@ $(function() {
     {
       let idx = typeof(fieldNameOrIndex) === 'number'? fieldNameOrIndex: this.getColPos(fieldNameOrIndex);
       this.element.find(`td:nth-of-type(${idx})`).each(f);
+      
       return this;
     },
 
@@ -735,6 +755,118 @@ $(function() {
     addCustomMenuItems: function(itemArr)
     {
       this._popup.callPlantagoWidget("addCustomItems", itemArr);
+    },
+
+// управление на клиенте - CRUD
+    _prepareCrudMeta: function()
+    {
+      return {
+        autoColCount: this._getAutoColumnCount(),
+        colNames: this._sortHeaders.map(th => this._getColNameByHeader(th)),
+        childSelectors: this._sortHeaders.map(th => this._getChildSelectorByHeader(th)),
+        isNumber: this._sortHeaders.map(th => this._getIsNumberByHeader(th)),
+        tickType: П.liTickType.get(this.options.tickType).name,
+        gridId: this.element.data("name")
+      };
+    },
+
+    getRow: function(rowId, meta)
+    {
+      if (meta === undefined)
+        meta = this._prepareCrudMeta();
+      const row = this.element.find(`tr[data-row-id='${rowId}']`);
+      if (!row)
+        return null;
+      const ret = {};
+      row.children().slice(meta.autoColCount).each((i, td) => {
+        const carrier = meta.childSelectors[i]? $(td).children(meta.childSelectors[i]): $(td);
+        let value = carrier.ownText();
+        if (meta.isNumber[i])
+          value = parseFloat(value);
+        ret[meta.colNames[i]] = value;
+      });
+      return ret;
+    },
+
+    getRows: function(rowIds)
+    { 
+      const meta = this._prepareCrudMeta();
+      return rowIds.reduce((acc, item) => {
+        acc[item] = this.getRow(item, meta);
+        return acc;
+      }, {});
+    },
+
+    deleteRow: function(rowId)
+    {
+      this.element.find(`tr[data-row-id='${rowId}']`).remove();
+      this._untieElement('tickTd' + rowId);
+      return this;
+    },
+
+    deleteRows: function(rowIds)
+    {
+      for (let rowId of rowIds)
+        this.deleteRow(rowId);
+      return this;
+    },
+
+    changeRow: function(rowId, fields, meta, dontSort)
+    {
+      if (meta === undefined)
+        meta = this._prepareCrudMeta();
+      const tr = this.element.find(`tr[data-row-id='${rowId}']`);
+      if (!tr.length)
+        return this.addRow(rowId, fields, meta, dontSort);
+      tr.children().slice(meta.autoColCount).each((i, td) => {
+        td = $(td);
+        const oldText = (meta.childSelectors[i]? td.children(meta.childSelectors[i]): td).ownText();
+        const newText = fields[meta.colNames[i]] || String.fromCharCode(160);
+        if (oldText != newText)
+        {
+          td.empty().ownText(newText);
+          if (this._augmenters[name])
+            this.augmenters[name](-1, td);
+        }
+      });
+      if (!dontSort)
+        this._sort();
+      return tr;
+    },
+
+    changeRows: function(dof)
+    {
+      const meta = this._prepareCrudMeta();
+      const ret = Object.keys(dof).map(rowId => this.changeRow(rowId, dof[rowId], meta, true));
+      this._sort();
+      return ret;
+    },
+
+    addRow: function(rowId, fields, meta, dontSort)
+    {
+      if (meta === undefined)
+        meta = this._prepareCrudMeta();
+      let tr = this.element.find(`tr[data-row-id='${rowId}']`);
+      if (tr.length)
+        return this.changeRow(rowId, fields, meta, dontSort);
+      tr = $("<tr>").data("row-id", rowId).appendTo(this.element.children("tbody"));
+      this._prependTickCol(tr, meta.tickType, meta.gridId);
+      meta.colNames.forEach((name, i) => {
+        $("<td>").ownText(fields[name] || '&nbsp;').appendTo(tr);
+        if (this._augmenters[name])
+          this.augmenters[name](-1, td);
+      });
+      if (!dontSort)
+        this._sort();
+      return tr;
+    },
+
+    addRows: function(dof)
+    {
+      const meta = this._prepareCrudMeta();
+      const ret = Object.keys(dof).map(rowId => this.addRow(rowId, dof[rowId], meta, true));
+      this._sort();
+      return ret;
     },
 
     _destroy: function()
