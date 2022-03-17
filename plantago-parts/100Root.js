@@ -218,9 +218,9 @@ $(function() {
     {
       // name, elementName, cssClass, selector, [creationProps], [owner], [makeFirst | after | before], [createWidget]
       if (!desc.name)
-        return this;
+        return desc.returnElement? null: this;
       if (this[desc.name] && !desc.forceSearch)
-        return this;
+        return desc.returnElement? this[desc.name]: this;
       if (desc.owner && !desc.owner.jquery)
         desc.owner = $(desc.owner);
       let probe = (desc.owner || this.element).children(desc.selector);
@@ -263,7 +263,7 @@ $(function() {
       if (!this._tiedElements)
         this._tiedElements = {};
       this[desc.name] = this._tiedElements[desc.name] = probe;
-      return this;
+      return desc.returnElement? probe: this;
     },
 
     _untieElement: function(name)
