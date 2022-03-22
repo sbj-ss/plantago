@@ -7,8 +7,9 @@ $(function() {
   {
     options:
     {
-      initialValue: "",
-      checkInitialValue: false
+      allowIndeterminate: false,
+      checkInitialValue: false,
+      initialValue: ""
     },
 
     _initialIndex: -1,
@@ -63,10 +64,20 @@ $(function() {
         discreteValue = value.value;
       else
         discreteValue = value;
-      if (typeof(discreteValue) !== "undefined")
-        this.element
-          .find("option[value='" + discreteValue + "']")
-          .prop("selected", 1);
+      if (typeof discreteValue === "undefined" || discreteValue === null)
+      {
+        if (this.options.allowIndeterminate)
+          this.element.prop("selectedIndex", -1);
+        return this;
+      }
+      const newOpt = this.element.find(`option[value='${discreteValue}']`);
+      if (!newOpt.length)
+      {
+        if (this.options.allowIndeterminate)
+          this.element.prop("selectedIndex", -1);
+        return this;
+      }
+      newOpt.prop("selected", 1);
       return this;
     },
 
