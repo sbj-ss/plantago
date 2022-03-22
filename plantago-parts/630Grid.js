@@ -44,11 +44,15 @@ $(function() {
   {
     options:
     {
+      autoTickFirstRow: false,
       colsHideable: true,
       colsMoveable: true,
       colsOrder: [], // придётся здесь не делать полный список, неудобно
       cssClass: "grid",
       displayName: П.localize("Таблица"), // для шапки контекстного меню
+      emphasizeModifiedRows: false,
+      emphasizeTicks: false,
+      moveTickOnDeletion: false,
       multiSort: true,
       name: "", // для эл-та управления с птичками/выбором
       showContextMenu: true,
@@ -65,13 +69,14 @@ $(function() {
     },
 
     _augmenters: {},
+    _tickedRow: null,
 
     _create: function()
     {
       this._superApply(arguments);
       this.element.data("plantagoClass-grid", 1);
       this
-        ._checkOptionsSanity()
+        ._checkOptionsSanity(this.options)
         ._refreshSortCols()
         ._hideShowCols()
         ._bindSortHandlers()
@@ -86,7 +91,7 @@ $(function() {
         contextmenu: function(e) {
           if (!that.options.showContextMenu)
             return;
-          const hasTicks = plantago.liTickType.get(that.options.tickType).name === "checkbox";
+          const hasTicks = that.options.tickType.name === "checkbox";
           that._popup
             .callPlantagoWidget("showItems", {
               checkAll: hasTicks,
@@ -96,6 +101,8 @@ $(function() {
             .callPlantagoWidget("showMenu", that.element, e);
         }
       });
+      if (this.options.autoTickFirstRow)
+        this.tickFirstRow();
     },
 
     getDisplayName: function()
@@ -103,22 +110,25 @@ $(function() {
       return this.options.displayName;
     },
 
-    _checkOptionsSanity: function() {
-      if (this.options.colsMoveable || this.options.colsHideable)
+    _checkOptionsSanity: function(options)
+    {
+      if (options.colsMoveable || options.colsHideable)
       {
         const offenders = this.element.find("th[colspan]").push(this.element.find("th[rowspan]"));
         if (offenders.length)
         {
           console.log("Переупорядочивание и скрытие столбцов не поддерживаются для многострочных заголовков!");
-          this.options.colsMoveable = this.options.colsHideable = false;
+          options.colsMoveable = options.colsHideable = false;
         }
       }
+      if (typeof options.tickType === "string")
+        options.tickType = plantago.liTickType.get(options.tickType);
       return this;
     },
 
     _getAutoColumnCount: function()
     {
-      return (plantago.liTickType.get(this.options.tickType).name !== "none");
+      return this.options.tickType.name !== "none";
     },
 
     _refreshSortCols: function()
@@ -241,14 +251,26 @@ $(function() {
       return this;
     },
     
-    _prependTickCol: function(tr, tickType, gridId)
+    _trackTickChange: function(e)
     {
-      if (tickType === undefined)
-        tickType = П.liTickType.get(this.options.tickType).name;
-      if (tickType === "none")
+      const newTickedRow = $(e.target).parent().parent();
+      if (this.options.tickType.name === "radio")
+      {
+        if (this.options.emphasizeTicks)
+        {
+          if (this._tickedRow)
+            this._tickedRow.removeClass("ticked");
+          newTickedRow.addClass("ticked");
+        }
+        this._tickedRow = newTickedRow;
+      }
+      this._trigger("change", e, newTickedRow.data("row-id"));
+    },
+    
+    _prependTickCol: function(tr)
+    {
+      if (this.options.tickType.name === "none")
         return;
-      if (gridId === undefined)
-        gridId = this.element.data("name");
       const that = this;
       const tdName = "tickTd" + (tr.data("row-id") || plantago.newId128());
       this._tieElement({
@@ -262,10 +284,10 @@ $(function() {
         returnElement: true
       }).append(
         $("<input>", {
-          type: tickType,
-          name: gridId,
+          type: this.options.tickType.name,
+          name: this.options.name,
           checked: П.parseBool(tr.data("row-checked"), false)
-        }).on("change.grid", e => that._trigger("change", e))
+        }).on("change.grid", e => that._trackTickChange(e))
       );
     },
 
@@ -273,8 +295,7 @@ $(function() {
     {
       this._untieElements({ startsWith: "tick" }); // сносит всё, включая сами ячейки
       // TODO: оптимизировать с учётом предыдущего типа, чтобы не перестраивать таблицу каждый раз
-      const tt = П.liTickType.get(this.options.tickType).name;
-      if (tt === "none")
+      if (this.options.tickType.name === "none")
         return this;
       this._tieElement({
         elementName: "th",
@@ -287,9 +308,8 @@ $(function() {
           rowspan: this.element.find("thead > tr").length
         }
       });
-      const gridId = this.element.data("name");
       const that = this;
-      this.element.find("tbody > tr").each((i, tr) => that._prependTickCol($(tr), tt, gridId));
+      this.element.find("tbody > tr").each((i, tr) => that._prependTickCol($(tr)));
       return this;
     },
 
@@ -415,6 +435,7 @@ $(function() {
         else
           colGetters.push("c.eq(" + colDatum.pos + ")" + childSel + ".ownText().trim()");
       }
+      colGetters.push("r.data('row-id')");
       return new Function("r", "c = r.children('td'); return [" + colGetters.join(", ") + "];");
     },
 
@@ -424,7 +445,7 @@ $(function() {
       src += "let orders = [" +
         this.options.sortOrder.split("|").map((v) => {
           return v[0] === "-"? -1: 1;
-        }) + "];";
+        }) + ", 1];";
       src += "for (let i = 0; i < a.length; i++) {";
       src += "  ret = f(a[i], b[i])*orders[i];"
       src += "  if (ret) return ret;";
@@ -592,6 +613,7 @@ $(function() {
     {
       if (!options.sortOrder)
         delete options.sortOrder; // не уводим сортировку в никуда TODO: снять маркеры?..
+      this._checkOptionsSanity(options);
       this._superApply(arguments);
       if ("colsMoveable" in options || "colsHideable" in options)
         this._appendMoveHideControls();
@@ -610,9 +632,11 @@ $(function() {
       if ("sortable" in options || "sortOrder" in options || "multiSort" in options)
         this._sort();
       if ("tickType" in options)
-        this._prependTicksCol();
+        this._prependTickCols();
       if ("showResetViewMenuItem" in options)
         this._showResetViewMenuItem();
+      if ("autoTickFirstRow" in options && options.autoTickFirstRow)
+        this.tickFirstRow();
     },
 
 // методы basicInput
@@ -638,7 +662,7 @@ $(function() {
 
     checkAll: function()
     {
-      if (П.liTickType.get(this.options.tickType).name === "checkbox")
+      if (this.options.tickType.name === "checkbox")
         this._getInputs().each((i, input) => {
           if (!input.disabled)
             input.checked = true;
@@ -648,7 +672,7 @@ $(function() {
 
     toggleCheck: function()
     {
-      if (П.liTickType.get(this.options.tickType).name === "checkbox")
+      if (this.options.tickType.name === "checkbox")
         this._getInputs().each((i, input) => {
           if (!input.disabled)
             input.checked = !input.checked;
@@ -670,7 +694,7 @@ $(function() {
 
     getValue: function()
     {
-      if (plantago.liTickType.get(this.options.tickType).name === "none")
+      if (this.options.tickType.name === "none")
         return null;
       if (!this.hasData())
         return [];
@@ -682,14 +706,15 @@ $(function() {
 
     hasData: function()
     {
-      if (plantago.liTickType.get(this.options.tickType).name === "none")
+      if (this.options.tickType.name === "none")
         return false;
       return !!this._getInputs().filter(":checked").length;
     },
 
     setData: function(hash)
     {
-      if (plantago.liTickType.get(this.options.tickType).name === "none")
+      // TODO оптимизировать для radio
+      if (this.options.tickType.name === "none")
         return;
       let arr = hash[this.options.name];
       if (!arr)
@@ -698,8 +723,14 @@ $(function() {
       this._getInputs().val(false);
       const tbody = this.element.children("tbody");
       arr.forEach((id) => {
-        tbody.find("tr[row-id=" + id + "] th:first-child input").prop("checked", true);
+        tbody.find("tr[data-row-id=" + id + "] th:first-child input").prop("checked", true).trigger("change");
       });
+    },
+    
+    tickFirstRow: function()
+    {
+      if (this.options.tickType.name === "radio" && !this.element.find(`input[type='radio'][name='${this.options.name}']:checked`).length)
+        this.setData({[this.options.name]: [this.element.find("tr:data('row-id'):first").data("row-id")]});
     },
 
 // вспомогательные функции для достройки контента по заказу
@@ -765,27 +796,32 @@ $(function() {
         colNames: this._sortHeaders.map(th => this._getColNameByHeader(th)),
         childSelectors: this._sortHeaders.map(th => this._getChildSelectorByHeader(th)),
         isNumber: this._sortHeaders.map(th => this._getIsNumberByHeader(th)),
-        tickType: П.liTickType.get(this.options.tickType).name,
-        gridId: this.element.data("name")
       };
     },
 
-    getRow: function(rowId, meta)
+    getRow: function(rowIdOrJq, meta)
     {
       if (meta === undefined)
         meta = this._prepareCrudMeta();
-      const row = this.element.find(`tr[data-row-id='${rowId}']`);
-      if (!row)
+      let tr;
+      if (rowIdOrJq.jquery)
+        tr = rowIdOrJq;
+      else
+        tr = this.element.find(`tr[data-row-id='${rowIdOrJq}']`);
+      if (!tr.length)
         return null;
-      const ret = {};
-      row.children().slice(meta.autoColCount).each((i, td) => {
+      const fieldValues = {};
+      tr.children().slice(meta.autoColCount).each((i, td) => {
         const carrier = meta.childSelectors[i]? $(td).children(meta.childSelectors[i]): $(td);
         let value = carrier.ownText();
         if (meta.isNumber[i])
           value = parseFloat(value);
-        ret[meta.colNames[i]] = value;
+        fieldValues[meta.colNames[i]] = value;
       });
-      return ret;
+      return {
+        fieldValues: fieldValues,
+        rowData: tr.data()
+      };
     },
 
     getRows: function(rowIds)
@@ -797,76 +833,206 @@ $(function() {
       }, {});
     },
 
-    deleteRow: function(rowId)
+    deleteRow: function(rowIdOrJq)
     {
-      this.element.find(`tr[data-row-id='${rowId}']`).remove();
+      let tr;
+      let rowId;
+      if (rowIdOrJq.jquery) {
+        tr = rowIdOrJq;
+        rowId = tr.data("row-id");
+      } else {
+        tr = this.element.find(`tr[data-row-id='${rowIdOrJq}']`);
+        rowId = rowIdOrJq;
+      }
+      if (!tr.length)
+        return this;
+      if (this.options.moveTickOnDeletion && this.options.tickType.name === "radio")
+      {
+        const tick = tr.find(`input[name='${this.options.name}']`);
+        if (tick[0].checked)
+        {
+          let adjacent = tr.next("tr");
+          if (!adjacent.length)
+            adjacent = tr.prev("tr");
+          if (adjacent.length)
+          {
+            const newTick = adjacent.find(`input[name='${this.options.name}']`);
+            newTick.trigger("click");
+          }
+        }
+      }
       this._untieElement('tickTd' + rowId);
+      tr.remove();
       return this;
     },
 
-    deleteRows: function(rowIds)
+    deleteRows: function(rowIdsOrJq)
     {
       for (let rowId of rowIds)
         this.deleteRow(rowId);
       return this;
     },
 
-    changeRow: function(rowId, fields, meta, dontSort)
+    deleteTickedRow: function()
+    {
+      if (this.options.tickType.name === "radio")
+        this.deleteRow(this._tickedRow);
+    },
+
+    _postProcessRow: function(tr, options)
+    {
+      if (options && options.scrollIntoView)
+        tr[0].scrollIntoViewIfNeeded();
+      if (this.options.tickType.name === "radio" && options.tick)
+        tr.find(`input[type='radio'][name='${this.options.name}']`).trigger("click");
+      if (this.options.emphasizeModifiedRows)
+        tr.addClass("modified");
+      return this;
+    },
+
+    changeRow: function(rowIdOrJq, data, options, meta, dontSort)
     {
       if (meta === undefined)
         meta = this._prepareCrudMeta();
-      const tr = this.element.find(`tr[data-row-id='${rowId}']`);
-      if (!tr.length)
-        return this.addRow(rowId, fields, meta, dontSort);
+      let tr;
+      if (rowIdOrJq.jquery)
+      {
+        if (!rowIdOrJq.length)
+          return this;
+        tr = rowIdOrJq;
+      } else {
+        tr = this.element.find(`tr[data-row-id='${rowIdOrJq}']`);
+        if (!tr.length)
+          return this.addRow(rowIdOrJq, fields, options, meta, dontSort);
+      }
+      const fields = data.fieldValues;
       tr.children().slice(meta.autoColCount).each((i, td) => {
+        if (!(meta.colNames[i] in fields)) // не трогаем поле, которое не передавали
+          return 0;
         td = $(td);
         const oldText = (meta.childSelectors[i]? td.children(meta.childSelectors[i]): td).ownText();
         const newText = fields[meta.colNames[i]] || String.fromCharCode(160);
-        if (oldText != newText)
+        if (oldText != newText) // оптимизация: не трогать то, что не меняли
         {
           td.empty().ownText(newText);
           if (this._augmenters[name])
             this.augmenters[name](-1, td);
         }
       });
+      tr.data(data.rowData);
+      this._postProcessRow(tr, options);
       if (!dontSort)
         this._sort();
       return tr;
     },
 
-    changeRows: function(dof)
+    changeRows: function(dof, options)
     {
       const meta = this._prepareCrudMeta();
-      const ret = Object.keys(dof).map(rowId => this.changeRow(rowId, dof[rowId], meta, true));
+      const ret = Object.keys(dof).map(rowId => this.changeRow(rowId, dof[rowId], options, meta, true));
       this._sort();
       return ret;
     },
 
-    addRow: function(rowId, fields, meta, dontSort)
+    changeTickedRow: function(data, options)
+    {
+      if (this.options.tickType.name === "radio")
+        this.changeRow(this._tickedRow, data, options);
+    },
+
+    addRow: function(rowId, data, options, meta, dontSort)
     {
       if (meta === undefined)
         meta = this._prepareCrudMeta();
       let tr = this.element.find(`tr[data-row-id='${rowId}']`);
       if (tr.length)
-        return this.changeRow(rowId, fields, meta, dontSort);
+        return this.changeRow(rowId, data, options, meta, dontSort);
+      const hadRows = this.element.find("tbody tr:first").length > 0;
       tr = $("<tr>").data("row-id", rowId).appendTo(this.element.children("tbody"));
-      this._prependTickCol(tr, meta.tickType, meta.gridId);
+      this._prependTickCol(tr);
+      const fields = data.fieldValues;
       meta.colNames.forEach((name, i) => {
-        $("<td>").ownText(fields[name] || '&nbsp;').appendTo(tr);
+        $("<td>").ownText(fields[name] || String.fromCharCode(160)).appendTo(tr);
         if (this._augmenters[name])
           this.augmenters[name](-1, td);
       });
+      tr.data(data.rowData);
       if (!dontSort)
         this._sort();
+      if (!hadRows && this.options.autoTickFirstRow)
+        this.tickFirstRow();
+      this._postProcessRow(tr, options);
       return tr;
     },
 
-    addRows: function(dof)
+    addRows: function(dof, options)
     {
       const meta = this._prepareCrudMeta();
-      const ret = Object.keys(dof).map(rowId => this.addRow(rowId, dof[rowId], meta, true));
+      const ret = Object.keys(dof).map(rowId => this.addRow(rowId, dof[rowId], options, meta, true));
       this._sort();
       return ret;
+    },
+
+    _deduplicate: function(mode, by) // mode: delete, show; by: ["fieldValues", "rowData"]
+    {
+      if (typeof mode === "undefined")
+        mode = "delete";
+      if (typeof by === "undefined")
+        by = ["fieldValues"];
+      else if (typeof by === "string")
+        by = [by];
+      if (!by.length)
+        return false;
+      const checkFieldValues = by.indexOf("fieldValues") >= 0;
+      const checkRowData = by.indexOf("rowData") >= 0;
+      const meta = this._prepareCrudMeta();
+      if (mode == "show")
+        this.element.find("tbody > tr").removeClass("duplicate");
+      let tr = this.element.find("tbody tr:first");
+      let oldData = this.getRow(tr, meta), newData;
+      let found = false;
+      while (true)
+      {
+        const next = tr.next();
+        if (!next.length)
+          break;
+        newData = this.getRow(next, meta);
+        if (
+          (checkFieldValues && plantago.memberwiseCompare(oldData.fieldValues, newData.fieldValues)) ||
+          (checkRowData && plantago.memberwiseCompare(oldData.rowData, newData.rowData))
+        )
+        {
+          if (mode == "delete")
+            this.deleteRow(tr);
+          else if (mode == "show")
+            tr.addClass("duplicate");
+          found = true;        
+        }
+        tr = next;
+        oldData = newData;
+      }
+      return found;
+    },
+
+    deduplicate: function(by)
+    {
+      this._deduplicate("delete", by);
+      return this;
+    },
+
+    showDuplicateRows: function(by)
+    {
+      return this._deduplicate("show", by);
+    },
+    
+    enumRows: function(callback) // callback(i, tr, data)
+    {
+      const that = this;
+      const meta = this._prepareCrudMeta();
+      this.element.find("tbody tr").each((i, tr) => {
+        tr = $(tr);
+        callback(i, tr, that.getRow(tr, meta))
+      });
     },
 
     _destroy: function()

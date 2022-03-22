@@ -428,6 +428,18 @@ input + .ui-icon.ui-icon-clear-left {
 .grid th.sortHeader:hover {
   background-color: #d9e590;
 }
+.grid tbody tr {
+  vertical-align: baseline;
+}
+.grid tr.ticked {
+  box-shadow: 0 -0.5px 2px 1px inset rgba(90 107 80 / 70%);
+}
+.grid tr.duplicate {
+  background-color: #ee7373 !important;
+}
+.grid tr.modified {
+  color: #8037b4;
+}
 .grid td, .grid th {
   padding: 2px;
   background: transparent;
