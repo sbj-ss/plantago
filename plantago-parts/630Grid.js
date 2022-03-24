@@ -920,9 +920,9 @@ $(function() {
         }
       });
       tr.data(data.rowData);
-      this._postProcessRow(tr, options);
       if (!dontSort)
         this._sort();
+      this._postProcessRow(tr, options);
       return tr;
     },
 
@@ -957,6 +957,7 @@ $(function() {
           this.augmenters[name](-1, td);
       });
       tr.data(data.rowData);
+      tr.attr("data-row-id", rowId);
       if (!dontSort)
         this._sort();
       if (!hadRows && this.options.autoTickFirstRow)
