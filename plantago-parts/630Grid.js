@@ -974,21 +974,11 @@ $(function() {
       return ret;
     },
 
-    _deduplicate: function(mode, by) // mode: delete, show; by: ["fieldValues", "rowData"]
+    _deduplicate: function(filters, callback)
+    // mode: delete, show
+    // filters: {rowData: ["a", "b"], "fieldValues": ["c", "d"]. пустой массив - взять все поля
     {
-      if (typeof mode === "undefined")
-        mode = "delete";
-      if (typeof by === "undefined")
-        by = ["fieldValues"];
-      else if (typeof by === "string")
-        by = [by];
-      if (!by.length)
-        return false;
-      const checkFieldValues = by.indexOf("fieldValues") >= 0;
-      const checkRowData = by.indexOf("rowData") >= 0;
       const meta = this._prepareCrudMeta();
-      if (mode == "show")
-        this.element.find("tbody > tr").removeClass("duplicate");
       let tr = this.element.find("tbody tr:first");
       let oldData = this.getRow(tr, meta), newData;
       let found = false;
@@ -998,15 +988,24 @@ $(function() {
         if (!next.length)
           break;
         newData = this.getRow(next, meta);
-        if (
-          (checkFieldValues && plantago.memberwiseCompare(oldData.fieldValues, newData.fieldValues)) ||
-          (checkRowData && plantago.memberwiseCompare(oldData.rowData, newData.rowData))
-        )
+        let same = false;
+        if (typeof filters === "undefined")
+          same = plantago.memberwiseCompare(oldData, newData);
+        else
+          for (let key of ["fieldValues", "rowData"])
+          {
+            if (filters[key])
+            {
+              const oldSubset = filters[key].length? П.sliceObject(oldData[key], filters[key]): oldData[key];
+              const newSubset = filters[key].length? П.sliceObject(newData[key], filters[key]): newData[key];
+              same = plantago.memberwiseCompare(oldSubset, newSubset);
+              if (same)
+                break;
+            }
+          }
+        if (same)
         {
-          if (mode == "delete")
-            this.deleteRow(tr);
-          else if (mode == "show")
-            tr.addClass("duplicate");
+          callback(tr);
           found = true;        
         }
         tr = next;
@@ -1015,15 +1014,16 @@ $(function() {
       return found;
     },
 
-    deduplicate: function(by)
+    deduplicate: function(filters)
     {
-      this._deduplicate("delete", by);
+      this._deduplicate(filters, tr => this.deleteRow(tr));
       return this;
     },
 
-    showDuplicateRows: function(by)
+    showDuplicateRows: function(filters)
     {
-      return this._deduplicate("show", by);
+      this.element.find("tbody > tr").removeClass("duplicate")
+      return this._deduplicate(filters, tr => tr.addClass("duplicate"));
     },
     
     enumRows: function(callback) // callback(i, tr, data)
