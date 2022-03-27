@@ -337,6 +337,8 @@
   // навешивание чего попало на Object.prototype приводит к дурным глюкам
   sliceObject: function(obj, ...keys) 
   {
+    if ($.isArray(keys[0]))
+      keys = keys[0];
     return keys.reduce((result, key) => {
       result[key] = obj[key];
       return result;
