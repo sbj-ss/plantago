@@ -1,4 +1,4 @@
-﻿/* common */
+/* common */
 .highlight {
   font-style: italic;
   color: #DC7A18;
@@ -380,6 +380,10 @@ input + .ui-icon.ui-icon-clear-left {
   box-shadow: 0 0 3px rgba(255, 107, 50, 0.9);
 }
 .toolButton.waiting {
+  color: #958bb0;
+}
+.plantago-toolButton-disabled {
+  background: linear-gradient(to bottom, white, #ddd);
   color: #958bb0;
 }
 .toolButton > .waitIcon {

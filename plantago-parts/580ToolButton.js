@@ -1,4 +1,4 @@
-﻿//---------
+//---------
 // Пимпочка
 //---------
 
@@ -24,7 +24,7 @@ $(function() {
         mousedown: "_showClick",
         click: function(e) {
           this._showHover();
-          if (!this._waiting)
+          if (!this._waiting && !this.options.disabled)
             this._trigger("run");
         }
       });
@@ -32,7 +32,7 @@ $(function() {
 
     _showHover: function() 
     {
-      if (this._waiting)
+      if (this._waiting || this.options.disabled)
         return;
       this.element
         .removeClass("down")
@@ -41,20 +41,22 @@ $(function() {
 
     _hideHover: function() 
     {
-      if (this._waiting)
-        return;
-      this.element
-        .removeClass("down")
-        .removeClass("hover");
+      this.element.removeClass("down hover");
     },
 
     _showClick: function() 
     {
-      if (this._waiting)
+      if (this._waiting || this.options.disabled)
         return;
       this.element
         .removeClass("hover")
         .addClass("down");
+    },
+    
+    disable: function()
+    {
+      this.element.removeClass("hover down");
+      this._superApply(arguments);
     },
 
     enterWaitState: function(lockOnly)
