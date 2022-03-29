@@ -858,9 +858,11 @@ $(function() {
           {
             const newTick = adjacent.find(`input[name='${this.options.name}']`);
             newTick.trigger("click");
-          }
+          } else
+            this._tickedRow = null;
         }
-      }
+      } else
+        this._tickedRow = null;
       this._untieElement('tickTd' + rowId);
       tr.remove();
       return this;
@@ -875,8 +877,12 @@ $(function() {
 
     deleteTickedRow: function()
     {
-      if (this.options.tickType.name === "radio")
+      if (this.options.tickType.name === "radio" && this._tickedRow)
+      {
         this.deleteRow(this._tickedRow);
+        return true;
+      }
+      return false;
     },
 
     _postProcessRow: function(tr, options)
