@@ -1,4 +1,4 @@
-﻿//-----------
+//-----------
 // Поле ввода
 //-----------
 
@@ -101,7 +101,7 @@ $(function() {
     {
       if (key == "valueType")
         value = plantago.inputValueType.get(value);
-      this._superApply(key, value);
+      this._superApply(arguments);
       switch(key)
       {
         case "valueType":
