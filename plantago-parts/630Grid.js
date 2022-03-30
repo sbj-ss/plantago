@@ -889,7 +889,7 @@ $(function() {
     {
       if (options && options.scrollIntoView)
         tr[0].scrollIntoViewIfNeeded();
-      if (this.options.tickType.name === "radio" && options.tick)
+      if (this.options.tickType.name === "radio" && options && options.tick)
         tr.find(`input[type='radio'][name='${this.options.name}']`).trigger("click");
       if (this.options.emphasizeModifiedRows)
         tr.addClass("modified");
