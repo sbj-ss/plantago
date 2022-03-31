@@ -61,6 +61,7 @@ $(function() {
       sortOrder: "",
       stateOptions: ["colsOrder", "sortOrder", "visibleCols"],
       stateSaveValue: false, // нечего. потом будут рандомные птички
+      tickByClick: false,
       tickType: "none",
       visibleCols: [], // и здесь тоже пустой список = ничего не делать 
       // events
@@ -82,6 +83,7 @@ $(function() {
         ._bindSortHandlers()
         ._appendMoveHideControls()
         ._prependTickCols()
+        ._bindTickByClickHandler()
         ._prependRowNumbersCol()
         ._reorderCols()
         ._createPopup()
@@ -310,6 +312,19 @@ $(function() {
       });
       const that = this;
       this.element.find("tbody > tr").each((i, tr) => that._prependTickCol($(tr)));
+      return this;
+    },
+
+    _bindTickByClickHandler: function()
+    {
+      if (this.options.tickByClick && this.options.tickType.name === "radio")
+      {
+        const name = this.options.name;
+        this.element.on("click.grid.tick", "tbody tr", function(e) {
+          $(this).find(`input[name='${name}']`).prop("checked", true).trigger("change");
+        });
+      } else
+        this.element.off("click.grid.tick");
       return this;
     },
 
@@ -637,6 +652,8 @@ $(function() {
         this._showResetViewMenuItem();
       if ("autoTickFirstRow" in options && options.autoTickFirstRow)
         this.tickFirstRow();
+      if ("tickByClick" in options)
+        this._bindTickByClickHandler();
     },
 
 // методы basicInput
