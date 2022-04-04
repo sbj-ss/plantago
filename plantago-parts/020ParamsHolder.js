@@ -1,4 +1,4 @@
-﻿//----------------------------------------
+//----------------------------------------
 // Хранилище параметров вызываемого модуля
 //----------------------------------------
 plantago.ParamsHolder = class extends Object
@@ -17,11 +17,12 @@ plantago.ParamsHolder = class extends Object
 
   append(key, value)
   {
-    if (typeof this[key] !== "undefined")
+    if (key in this)
     {
       if (!$.isArray(this[key]))
         this[key] = [this[key]];
-      this[key].push(value);
+      if (this[key].indexOf(value) === -1)
+        this[key].push(value);
     } else
       this[key] = value;
     return this;
@@ -29,18 +30,14 @@ plantago.ParamsHolder = class extends Object
 
   parse(params)
   {
-    for (let item of params.split("&"))
-    {
-      const cpl = item.split("=");
-      this.append(cpl[0], cpl[1]);
-    } 
+    if (params)
+      params.split("&").map(pair => this.append(...pair.split("=")));
     return this;
   }
 
   clear()
   {
-    for (let f in Object.keys(this))
-      delete this[f];
+    Object.keys(this).map(k => delete this[k]);
     return this;
   }
 
@@ -59,11 +56,13 @@ plantago.ParamsHolder = class extends Object
     if ($.isArray(names))
       for (let name of names)
         this.deleteParam(name);
-    else if ($.isPlainObject(names))
+    else if ($.isPlainObject(names) || names instanceof plantago.ParamsHolder)
       for (let name in names)
         this.deleteParam(name);
-    else
+    else if (typeof names !== "undefined")
       delete this[names];
+    else
+      this.clear();
     return this;
   }
 
@@ -74,17 +73,11 @@ plantago.ParamsHolder = class extends Object
 
   toString()
   {
-    let s = "";
-    for (let e of Object.entries(this))
-    {
-      if (s)
-        s += "&";
-      if ($.isArray(e[1]))
-        s += e[1].map((v) => { return e[0] + "=" + v }).join("&");
-      else
-        s += e[0] + "=" + e[1];
-    }
-    return s;
+    return Object.entries(this).map(
+      v => $.isArray(v[1])?
+        v[1].map(item => `${v[0]}=${item}`).join("&"):
+        `${v[0]}=${v[1]}`
+    ).join("&");
   }
 
   buildUrl(href, parameters, overwrite)

@@ -11,65 +11,6 @@ plantago.Location = class extends Object
     this.setHref(url);
   }
 
-  getHost()
-  {
-    return this.hostname + (this._port? ":" + this._port: "");
-  }
-
-  setHost(newValue)
-  {
-    const six = newValue.split(":");
-    this.hostname = six[0];
-    this._port = six[1];
-    return this;
-  }
-
-  getOrigin()
-  {
-    return this.protocol + "//" + this.getHost();
-  }
-
-  setOrigin(newValue)
-  {
-    const six = newValue.split("//");
-    this.protocol = six[0];
-    this.setHost(six.slice(1).join("//"));
-    return this;
-  }
-
-  getPort()
-  {
-    return (this._port | 0) || (this.protocol === "https:"? 443: 80);
-  }
-
-  getSearch()
-  {
-    const s = this.params.toString();
-    return s? "?" + s: "";
-  }
-
-  setSearch(newValue)
-  {
-    this.params = new plantago.ParamsHolder(newValue.substring(1));
-  }
-
-  getHref(url)
-  {
-    return this.getOrigin() + this.pathname + this.getSearch() + (this.hash? "#" + this.hash: "");
-  }
-
-  setHref(url)
-  {
-    let six = url.split("?");
-    const originAndPathname = six[0];
-    six = six.slice(1).join("?").split("#");
-    this.setSearch("?" + six[0]);
-    this.hash = six[1] || "";
-    six = originAndPathname.split("/");
-    this.setOrigin(six.slice(0, 3).join("/"));
-    this.pathname = "/" + six.slice(3).join("/");
-  }
-
   _defineProperties()
   {
     const props = {
@@ -117,34 +58,63 @@ plantago.Location = class extends Object
     }
   }
 
-  setProtocol(newValue)
+  getHref(url)
   {
-    this.protocol = newValue;
+    return this.getOrigin() + this.pathname + this.getSearch() + (this.hash? "#" + this.hash: "");
+  }
+
+  setHref(url)
+  {
+    let six = url.split("?");
+    const originAndPathname = six[0];
+    six = six.slice(1).join("?").split("#");
+    this.setSearch("?" + six[0]);
+    this.hash = six[1] || "";
+    six = originAndPathname.split("/");
+    this.setOrigin(six.slice(0, 3).join("/"));
+    this.pathname = "/" + six.slice(3).join("/");
+  }
+
+  getOrigin()
+  {
+    return this.protocol + "//" + this.getHost();
+  }
+
+  setOrigin(newValue)
+  {
+    const six = newValue.split("//");
+    this.protocol = six[0];
+    this.setHost(six.slice(1).join("//"));
     return this;
   }
 
-  setHostname(newValue)
+  getHost()
   {
-    this.hostname = newValue;
+    return this.hostname + (this._port? ":" + this._port: "");
+  }
+
+  setHost(newValue)
+  {
+    const six = newValue.split(":");
+    this.hostname = six[0];
+    this._port = six[1];
     return this;
   }
 
-  setPort(newValue)
+  getPort()
   {
-    this.port = newValue;
-    return this;
+    return (this._port | 0) || (this.protocol === "https:"? 443: 80);
   }
 
-  setPathname(newValue)
+  getSearch()
   {
-    this.pathname = newValue;
-    return this;
+    const s = this.params.toString();
+    return s? "?" + s: "";
   }
 
-  setHash(newValue)
+  setSearch(newValue)
   {
-    this.hash = newValue;
-    return this;
+    this.params = new plantago.ParamsHolder(newValue.substring(1));
   }
 
   appendParams(params)
@@ -170,15 +140,15 @@ plantago.Location = class extends Object
     return this.getHref();
   }
 
-  buildUrl(params, overwrite)
+  buildUrl(params)
   {
     if (typeof params === "undefined")
       return this.toString();
-    return this.replaceParams(params, overwrite).toString();
+    return this.replaceParams(params).toString();
   }
 
-  navigate(params, overwrite)
+  navigate(params)
   {
-    window.location.assign(this.buildUrl(params, overwrite));
+    window.location.assign(this.buildUrl(params));
   }
 };
