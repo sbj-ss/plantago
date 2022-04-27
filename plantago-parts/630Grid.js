@@ -850,6 +850,13 @@ $(function() {
       }, {});
     },
 
+    getTickedRow: function()
+    {
+      if (this.options.tickType.name === "radio" && this._tickedRow)
+        return this.getRow(this._tickedRow);
+      return {};
+    },
+
     deleteRow: function(rowIdOrJq)
     {
       let tr;
