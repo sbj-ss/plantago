@@ -334,6 +334,35 @@
     return true;
   },
 
+  memberwiseConcat: function(c, delimiter)
+  {
+    if (c === null || typeof c === "undefined")
+      return "";
+    if ($.isPlainObject(c))
+      return plantago.memberwiseConcatHash(c, delimiter);
+    if ($.isArray(c))
+      return plantago.memberwiseConcatArray(c, delimiter);
+    return c.toString();
+  },
+
+  memberwiseConcatHash: function(h, delimiter)
+  {
+    if (typeof delimiter === "undefined")
+      delimiter = "";
+    return "{" + Object.keys(h)
+      .sort()
+      .map(k => `${k}=${plantago.memberwiseConcat(h[k], delimiter)}`)
+      .join(delimiter)
+      + "}";
+  },
+
+  memberwiseConcatArray: function(a, delimiter)
+  {
+    if (typeof delimiter === "undefined")
+      delimiter = "";
+    return "[" + a.map(v => plantago.memberwiseConcat(v, delimiter)).join(delimiter) + "]";
+  },
+
   // навешивание чего попало на Object.prototype приводит к дурным глюкам
   sliceObject: function(obj, ...keys) 
   {
