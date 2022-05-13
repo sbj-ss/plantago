@@ -285,9 +285,9 @@
       return false;
     if (typeof a === "number" && typeof b === "number" && isNaN(a) && isNaN(b))
       return true;
-    if (typeof a === "object")
+    if ($.isPlainObject(a))
     {
-      if (typeof b === "object")
+      if ($.isPlainObject(b))
         return plantago.compareHashes(a, b);
       return false;
     }
@@ -295,8 +295,7 @@
     {
       if ($.isArray(b))
         return plantago.compareArrays(a, b);
-      else 
-        return false;
+      return false;
     }
     return (a == b);
   },
