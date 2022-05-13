@@ -40,7 +40,8 @@ plantago.ComplexKeyHash = class extends Object
       pairs = [{key: key, value: value}];
     else {
       let found = false;
-      for (let pair of pairs)
+      let pair;
+      for (pair of pairs)
         if (plantago.memberwiseCompare(key, pair.key))
         {
           found = true;
