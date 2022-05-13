@@ -1004,56 +1004,41 @@ $(function() {
       return ret;
     },
 
-    _deduplicate: function(filters, callback)
-    // mode: delete, show
+    _enumDuplicates: function(filters, callback)
     // filters: {rowData: ["a", "b"], "fieldValues": ["c", "d"]. пустой массив - взять все поля
     {
       const meta = this._prepareCrudMeta();
-      let tr = this.element.find("tbody tr:first");
-      let oldData = this.getRow(tr, meta), newData;
-      let found = false;
-      while (true)
-      {
-        const next = tr.next();
-        if (!next.length)
-          break;
-        newData = this.getRow(next, meta);
-        let same = false;
-        if (typeof filters === "undefined")
-          same = plantago.memberwiseCompare(oldData, newData);
-        else
-          for (let key of ["fieldValues", "rowData"])
-          {
-            if (filters[key])
-            {
-              const oldSubset = filters[key].length? П.sliceObject(oldData[key], filters[key]): oldData[key];
-              const newSubset = filters[key].length? П.sliceObject(newData[key], filters[key]): newData[key];
-              same = plantago.memberwiseCompare(oldSubset, newSubset);
-              if (same)
-                break;
-            }
-          }
-        if (same)
+      const hash = new plantago.ComplexKeyHash();
+      let hasDups = false;
+      this.element.find("tbody > tr").each((i, tr) => {
+        tr = $(tr);
+        let data = this.getRow(tr, meta);
+        if (typeof filters !== "undefined")
+          data = ["fieldValues", "rowData"].reduce((state, key) => {
+            if (key in filters)
+              state[key] = filters[key].length? П.sliceObject(data[key], filters[key]): data[key];
+            return state;
+          }, {});
+        if (hash.contains(data))
         {
           callback(tr);
-          found = true;        
-        }
-        tr = next;
-        oldData = newData;
-      }
-      return found;
+          hasDups = true;
+        } else
+          hash.put(data, 1);
+      });
+      return hasDups;
     },
 
     deduplicate: function(filters)
     {
-      this._deduplicate(filters, tr => this.deleteRow(tr));
+      this._enumDuplicates(filters, tr => this.deleteRow(tr));
       return this;
     },
 
     showDuplicateRows: function(filters)
     {
-      this.element.find("tbody > tr").removeClass("duplicate")
-      return this._deduplicate(filters, tr => tr.addClass("duplicate"));
+      this.element.find("tbody > tr").removeClass("duplicate");
+      return this._enumDuplicates(filters, tr => tr.addClass("duplicate"));
     },
     
     enumRows: function(callback) // callback(i, tr, data)
