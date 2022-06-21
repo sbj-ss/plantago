@@ -450,6 +450,7 @@ $(function() {
         else
           colGetters.push("c.eq(" + colDatum.pos + ")" + childSel + ".ownText().trim()");
       }
+      colGetters.push("r.hasClass('modified')");
       colGetters.push("r.data('row-id')");
       return new Function("r", "c = r.children('td'); return [" + colGetters.join(", ") + "];");
     },
@@ -460,7 +461,7 @@ $(function() {
       src += "let orders = [" +
         this.options.sortOrder.split("|").map((v) => {
           return v[0] === "-"? -1: 1;
-        }) + ", 1];";
+        }) + ", 1, 1];";
       src += "for (let i = 0; i < a.length; i++) {";
       src += "  ret = f(a[i], b[i])*orders[i];"
       src += "  if (ret) return ret;";
